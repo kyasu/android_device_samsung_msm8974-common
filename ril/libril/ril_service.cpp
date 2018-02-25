@@ -17,10 +17,17 @@
 
 #define LOG_TAG "RILC"
 
+#ifdef V1_1
 #include <android/hardware/radio/1.1/IRadio.h>
 #include <android/hardware/radio/1.1/IRadioResponse.h>
 #include <android/hardware/radio/1.1/IRadioIndication.h>
 #include <android/hardware/radio/1.1/types.h>
+#else
+#include <android/hardware/radio/1.0/IRadio.h>
+#include <android/hardware/radio/1.0/IRadioResponse.h>
+#include <android/hardware/radio/1.0/IRadioIndication.h>
+#include <android/hardware/radio/1.0/types.h>
+#endif
 
 #include <android/hardware/radio/deprecated/1.0/IOemHook.h>
 
@@ -118,12 +125,18 @@ void convertRilDataCallListToHal(void *response, size_t responseLen,
 
 void convertRilCellInfoListToHal(void *response, size_t responseLen, hidl_vec<CellInfo>& records);
 
+#ifdef V1_1
 struct RadioImpl : public V1_1::IRadio {
+#else
+struct RadioImpl : public V1_0::IRadio {
+#endif
     int32_t mSlotId;
     sp<IRadioResponse> mRadioResponse;
     sp<IRadioIndication> mRadioIndication;
+#ifdef V1_1
     sp<V1_1::IRadioResponse> mRadioResponseV1_1;
     sp<V1_1::IRadioIndication> mRadioIndicationV1_1;
+#endif
 
     Return<void> setResponseFunctions(
             const ::android::sp<IRadioResponse>& radioResponse,
@@ -254,9 +267,11 @@ struct RadioImpl : public V1_1::IRadio {
 
     Return<void> getAvailableNetworks(int32_t serial);
 
+#ifdef V1_1
     Return<void> startNetworkScan(int32_t serial, const V1_1::NetworkScanRequest& request);
 
     Return<void> stopNetworkScan(int32_t serial);
+#endif
 
     Return<void> startDtmf(int32_t serial,
             const ::android::hardware::hidl_string& s);
@@ -446,18 +461,24 @@ struct RadioImpl : public V1_1::IRadio {
 
     Return<void> setIndicationFilter(int32_t serial, int32_t indicationFilter);
 
+#ifdef V1_1
     Return<void> startKeepalive(int32_t serial, const V1_1::KeepaliveRequest& keepalive);
 
     Return<void> stopKeepalive(int32_t serial, int32_t sessionHandle);
+#endif
 
     Return<void> setSimCardPower(int32_t serial, bool powerUp);
+#ifdef V1_1
     Return<void> setSimCardPower_1_1(int32_t serial,
             const V1_1::CardPowerState state);
+#endif
 
     Return<void> responseAcknowledgement();
 
+#ifdef V1_1
     Return<void> setCarrierInfoForImsiEncryption(int32_t serial,
             const V1_1::ImsiEncryptionInfo& message);
+#endif
 
     void checkReturnStatus(Return<void>& ret);
 };
@@ -761,8 +782,10 @@ void checkReturnStatus(int32_t slotId, Return<void>& ret, bool isRadioService) {
             if (isRadioService) {
                 radioService[slotId]->mRadioResponse = NULL;
                 radioService[slotId]->mRadioIndication = NULL;
+#ifdef V1_1
                 radioService[slotId]->mRadioResponseV1_1 = NULL;
                 radioService[slotId]->mRadioIndicationV1_1 = NULL;
+#endif
             } else {
                 oemHookService[slotId]->mOemHookResponse = NULL;
                 oemHookService[slotId]->mOemHookIndication = NULL;
@@ -798,12 +821,14 @@ Return<void> RadioImpl::setResponseFunctions(
 
     mRadioResponse = radioResponseParam;
     mRadioIndication = radioIndicationParam;
+#ifdef V1_1
     mRadioResponseV1_1 = V1_1::IRadioResponse::castFrom(mRadioResponse).withDefault(nullptr);
     mRadioIndicationV1_1 = V1_1::IRadioIndication::castFrom(mRadioIndication).withDefault(nullptr);
     if (mRadioResponseV1_1 == nullptr || mRadioIndicationV1_1 == nullptr) {
         mRadioResponseV1_1 = nullptr;
         mRadioIndicationV1_1 = nullptr;
     }
+#endif
 
     mCounterRadio[mSlotId]++;
 
@@ -1353,6 +1378,7 @@ Return<void> RadioImpl::getAvailableNetworks(int32_t serial) {
     return Void();
 }
 
+#ifdef V1_1
 Return<void> RadioImpl::startNetworkScan(int32_t serial, const V1_1::NetworkScanRequest& request) {
 #if VDBG
     RLOGD("startNetworkScan: serial %d", serial);
@@ -1426,6 +1452,7 @@ Return<void> RadioImpl::stopNetworkScan(int32_t serial) {
     dispatchVoid(serial, mSlotId, RIL_REQUEST_STOP_NETWORK_SCAN);
     return Void();
 }
+#endif /* V1_1 */
 
 Return<void> RadioImpl::startDtmf(int32_t serial, const hidl_string& s) {
 #if VDBG
@@ -2782,6 +2809,7 @@ Return<void> RadioImpl::setSimCardPower(int32_t serial, bool powerUp) {
     return Void();
 }
 
+#ifdef V1_1
 Return<void> RadioImpl::setSimCardPower_1_1(int32_t serial, const V1_1::CardPowerState state) {
 #if VDBG
     RLOGD("setSimCardPower_1_1: serial %d state %d", serial, state);
@@ -2885,6 +2913,7 @@ Return<void> RadioImpl::stopKeepalive(int32_t serial, int32_t sessionHandle) {
     CALL_ONREQUEST(pRI->pCI->requestNumber, &sessionHandle, sizeof(uint32_t), pRI, mSlotId);
     return Void();
 }
+#endif /* V1_1 */
 
 Return<void> RadioImpl::responseAcknowledgement() {
     android::releaseWakeLock();
@@ -6564,6 +6593,7 @@ int radio::sendDeviceStateResponse(int slotId,
     return 0;
 }
 
+#ifdef V1_1
 int radio::setCarrierInfoForImsiEncryptionResponse(int slotId,
                                int responseType, int serial, RIL_Errno e,
                                void *response, size_t responseLen) {
@@ -6580,6 +6610,7 @@ int radio::setCarrierInfoForImsiEncryptionResponse(int slotId,
     }
     return 0;
 }
+#endif
 
 int radio::setIndicationFilterResponse(int slotId,
                               int responseType, int serial, RIL_Errno e,
@@ -6609,6 +6640,7 @@ int radio::setSimCardPowerResponse(int slotId,
     RLOGD("setSimCardPowerResponse: serial %d", serial);
 #endif
 
+#ifdef V1_1
     if (radioService[slotId]->mRadioResponse != NULL
             || radioService[slotId]->mRadioResponseV1_1 != NULL) {
         RadioResponseInfo responseInfo = {};
@@ -6629,8 +6661,21 @@ int radio::setSimCardPowerResponse(int slotId,
                 "radioService[%d]->mRadioResponseV1_1 == NULL", slotId, slotId);
     }
     return 0;
+#else
+    if (radioService[slotId]->mRadioResponse != NULL) {
+        RadioResponseInfo responseInfo = {};
+        populateResponseInfo(responseInfo, serial, responseType, e);
+        Return<void> retStatus
+                = radioService[slotId]->mRadioResponse->setSimCardPowerResponse(responseInfo);
+        radioService[slotId]->checkReturnStatus(retStatus);
+    } else {
+        RLOGE("setSimCardPowerResponse: radioService[%d]->mRadioResponse == NULL", slotId);
+    }
+    return 0;
+#endif
 }
 
+#ifdef V1_1
 int radio::startNetworkScanResponse(int slotId, int responseType, int serial, RIL_Errno e,
                                     void *response, size_t responseLen) {
 #if VDBG
@@ -6722,6 +6767,7 @@ int radio::stopKeepaliveResponse(int slotId, int responseType, int serial, RIL_E
     radioService[slotId]->checkReturnStatus(retStatus);
     return 0;
 }
+#endif /* V1_1 */
 
 int radio::sendRequestRawResponse(int slotId,
                                   int responseType, int serial, RIL_Errno e,
@@ -8508,6 +8554,7 @@ int radio::modemResetInd(int slotId,
     return 0;
 }
 
+#ifdef V1_1
 int radio::networkScanResultInd(int slotId,
                                 int indicationType, int token, RIL_Errno e, void *response,
                                 size_t responseLen) {
@@ -8596,6 +8643,7 @@ int radio::keepaliveStatusInd(int slotId,
     radioService[slotId]->checkReturnStatus(retStatus);
     return 0;
 }
+#endif /* V1_1 */
 
 int radio::oemHookRawInd(int slotId,
                          int indicationType, int token, RIL_Errno e, void *response,
@@ -8651,8 +8699,13 @@ void radio::registerService(RIL_RadioFunctions *callbacks, CommandInfo *commands
         radioService[i]->mSlotId = i;
         oemHookService[i] = new OemHookImpl;
         oemHookService[i]->mSlotId = i;
+#ifdef V1_1
         RLOGD("registerService: starting android::hardware::radio::V1_1::IRadio %s",
                 serviceNames[i]);
+#else
+        RLOGD("registerService: starting android::hardware::radio::V1_0::IRadio %s",
+                serviceNames[i]);
+#endif
         android::status_t status = radioService[i]->registerAsService(serviceNames[i]);
         status = oemHookService[i]->registerAsService(serviceNames[i]);
 

@@ -199,6 +199,7 @@ int getAvailableNetworksResponse(int slotId,
                                 int responseType, int serial, RIL_Errno e, void *response,
                                 size_t responselen);
 
+#ifdef V1_1
 int startNetworkScanResponse(int slotId,
                              int responseType, int serial, RIL_Errno e, void *response,
                              size_t responselen);
@@ -206,6 +207,7 @@ int startNetworkScanResponse(int slotId,
 int stopNetworkScanResponse(int slotId,
                             int responseType, int serial, RIL_Errno e, void *response,
                             size_t responselen);
+#endif
 
 int startDtmfResponse(int slotId,
                      int responseType, int serial, RIL_Errno e, void *response,
@@ -541,6 +543,7 @@ int setSimCardPowerResponse(int slotId,
                               int responseType, int serial, RIL_Errno e,
                               void *response, size_t responselen);
 
+#ifdef V1_1
 int startKeepaliveResponse(int slotId,
                            int responseType, int serial, RIL_Errno e,
                            void *response, size_t responselen);
@@ -548,6 +551,7 @@ int startKeepaliveResponse(int slotId,
 int stopKeepaliveResponse(int slotId,
                           int responseType, int serial, RIL_Errno e,
                           void *response, size_t responselen);
+#endif
 
 void acknowledgeRequest(int slotId, int serial);
 
@@ -717,6 +721,7 @@ int modemResetInd(int slotId,
                   int indicationType, int token, RIL_Errno e, void *response,
                   size_t responselen);
 
+#ifdef V1_1
 int networkScanResultInd(int slotId,
                          int indicationType, int token, RIL_Errno e, void *response,
                          size_t responselen);
@@ -724,6 +729,7 @@ int networkScanResultInd(int slotId,
 int keepaliveStatusInd(int slotId,
                        int indicationType, int token, RIL_Errno e, void *response,
                        size_t responselen);
+#endif
 
 int sendRequestRawResponse(int slotId,
                            int responseType, int serial, RIL_Errno e,
@@ -733,9 +739,11 @@ int sendRequestStringsResponse(int slotId,
                                int responseType, int serial, RIL_Errno e,
                                void *response, size_t responseLen);
 
+#ifdef V1_1
 int setCarrierInfoForImsiEncryptionResponse(int slotId,
                                             int responseType, int serial, RIL_Errno e,
                                             void *response, size_t responseLen);
+#endif
 
 int carrierInfoForImsiEncryption(int slotId,
                         int responseType, int serial, RIL_Errno e,
