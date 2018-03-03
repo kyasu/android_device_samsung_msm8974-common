@@ -44,7 +44,7 @@ BOARD_HARDWARE_CLASS += device/samsung/msm8974-common/lineagehw
 # Dexpreopt
 ifeq ($(HOST_OS),linux)
   ifneq ($(TARGET_BUILD_VARIANT),eng)
-    WITH_DEXPREOPT_BOOT_IMG_AND_SYSTEM_SERVER_ONLY := false
+    WITH_DEXPREOPT_BOOT_IMG_AND_SYSTEM_SERVER_ONLY ?= false
     WITH_DEXPREOPT := true
   endif
 endif
@@ -76,6 +76,11 @@ include device/samsung/msm8974-common/sepolicy/sepolicy.mk
 # Init
 TARGET_INIT_VENDOR_LIB := libinit_msm8974
 TARGET_RECOVERY_DEVICE_MODULES := libinit_msm8974
+
+# Power
+TARGET_HAS_LEGACY_POWER_STATS := true
+TARGET_HAS_NO_WIFI_STATS := true
+TARGET_USES_INTERACTION_BOOST := true
 
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
